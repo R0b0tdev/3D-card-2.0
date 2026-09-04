@@ -1,0 +1,13 @@
+{
+  "output/gems.json": "54243e3e19956a8e29d610f5ab327b6913fc12584d568303581ace20adfc8e0d",
+  "textures/side1-base.jpg": "cbd82cb2097d2692aa71daa7cf2721c3b3306e030f0e8cbe3a6c38e6026bfc42",
+  "textures/side1-metal.png": "f1ccb73503812fb31e555ba1509d1f0b93b1f0aae1bf6637b78eb309b1a55e03",
+  "textures/side1-normal.png": "b5011175f1f3b92d055b72489abc0aa68878fa19f7a99cb2939959b500a5ba70",
+  "textures/side1-pearl.png": "0e360cfe205386b5843a318b45108412aa67007892363b1c990b7bcfa8f901f8",
+  "textures/side1-rough.png": "840652b4cc099d2085bebc80a6e68a0373a8953e6e24716222efacf385c3d8c1",
+  "textures/side2-base.jpg": "7a1aad93b6b4d1470d63050beed79bd66fd5311109f4b9ca80002931a71a5358",
+  "textures/side2-metal.png": "1c78f440dae86ccb9efea24e3f8907777d72a1e8f9c5f81213a4db68fa6dfa57",
+  "textures/side2-normal.png": "92528c0cc802b354f6c1cb56777045beaee090e057d2e20e59f06b0f645620b4",
+  "textures/side2-pearl.png": "1bdd6799569db38106ecf6346806bc37dcc5abe36b8d116d8bf538312f0f995c",
+  "textures/side2-rough.png": "24ad7e45c5aa7f80f758cdfee0a267f5109fb84bcb57c6375b0768f1e3d4923f"
+}

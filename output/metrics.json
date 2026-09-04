@@ -1,0 +1,28 @@
+{
+  "width_mm": 53.98,
+  "height_mm": 85.6,
+  "corner_radius_mm": 3.18,
+  "core_thickness_mm": 0.76,
+  "cutout_count": 24,
+  "support_bridges": 0,
+  "cutout_area_percent": 4.68,
+  "surface_triangles_per_side": 210003,
+  "gemstones_per_side": [
+    256,
+    248
+  ],
+  "reconstruction": "Photographic interpretation; material species and relief depths are not measured.",
+  "glb_bytes": 56466288,
+  "shell_nonmanifold_edges": 0,
+  "blender_version": "4.5.3 LTS",
+  "total_mesh_vertices": 1667832,
+  "outer_roll_radius_mm": 0.3,
+  "cutout_roll_radius_mm": 0.18,
+  "rounded_rim_vertices": 1216768,
+  "rim_cleanup": {
+    "cutouts": 24,
+    "smooth_contours": true,
+    "texture_maps_unchanged": true,
+    "gemstones_unchanged": true
+  }
+}
