@@ -162,6 +162,8 @@ for name,(vv,ff) in batches.items():
  obj=bpy.data.objects.new('02 • '+name,mesh);scene.collection.objects.link(obj)
  for f in mesh.polygons:f.use_smooth=name=='bezels'
 
+exec(compile((P/'central_diamonds.py').read_text(encoding='utf-8-sig'),'central_diamonds.py','exec'),{'__file__':str(P/'central_diamonds.py')})
+
 # Camera and an actual studio lighting rig for editing/rendering in Blender.
 world=bpy.data.worlds.new('Warm charcoal studio');scene.world=world;world.use_nodes=True;world.node_tree.nodes['Background'].inputs[0].default_value=(.12,.14,.18,1);world.node_tree.nodes['Background'].inputs[1].default_value=.35
 

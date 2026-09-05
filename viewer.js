@@ -25,6 +25,12 @@ for(const [x,y,z,w,h,power] of [[-3,1,2,1.3,7,2.6],[3,0,1,.45,7,4],[0,0,4,3.8,5,
  card.position.set(x,y,z);card.lookAt(0,0,0);goldStudio.add(card);
 }
 const goldEnvironment=pmrem.fromScene(goldStudio,.015).texture;
+const diamondStudio=new THREE.Scene();diamondStudio.background=new THREE.Color(.18,.18,.18);
+for(const [x,y,z,w,h,power] of [[-3,2,2,1.5,4,5],[3,0,2,.65,4,7],[0,3,-2,3,1.1,4],[0,-3,1,1.7,1.4,2],[0,0,4,1.2,1.2,3]]){
+ const panel=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(power,power,power),side:THREE.DoubleSide}));
+ panel.position.set(x,y,z);panel.lookAt(0,0,0);diamondStudio.add(panel);
+}
+const centralDiamondEnvironment=pmrem.fromScene(diamondStudio,.005).texture;
 const goldMaterials=new Set();
 const controls=new TrackballControls(camera,renderer.domElement);controls.noPan=true;controls.minDistance=.064;controls.maxDistance=.45;controls.rotateSpeed=2.5;controls.zoomSpeed=1.05;controls.staticMoving=true;
 const pivot=new THREE.Group();scene.add(pivot);
@@ -33,15 +39,48 @@ const original=new Map();const clayMat=new THREE.MeshStandardMaterial({color:'#c
 function home(){controls.reset();camera.position.set(0,0,innerWidth<650?.28:.215);controls.target.set(0,0,0);pivot.rotation.set(Math.PI+.075,-.19,Math.PI-.035);zoomed=false;target=null;controls.update();}
 home();
 const draco=new DRACOLoader();draco.setDecoderPath('./node_modules/three/examples/jsm/libs/draco/gltf/');
-new GLTFLoader().setDRACOLoader(draco).load('output/jewellery-card.glb?v=soft-rounded-11',gltf=>{
+new GLTFLoader().setDRACOLoader(draco).load('output/jewellery-card.glb?v=central-brilliants-19',gltf=>{
  const root=gltf.scene;root.rotation.x=Math.PI/2;root.rotateOnWorldAxis(new THREE.Vector3(0,0,1),Math.PI);pivot.add(root);
  root.traverse(o=>{if(!o.isMesh)return;o.frustumCulled=false;const mats=Array.isArray(o.material)?o.material:[o.material];
  for(let m of mats){m.envMapIntensity=1.35;if(m.map)m.map.anisotropy=renderer.capabilities.getMaxAnisotropy();if(m.normalMap)m.normalMap.anisotropy=8;
  if(m.name.startsWith('Au')){m.envMap=goldEnvironment;m.envMapIntensity=1.65;m.roughness=.115;if(m.name.startsWith('Au edge')){m.roughness=.30;m.envMapIntensity=1.1;m.clearcoat=0;}goldMaterials.add(m);}
+ if(m.name.startsWith('Central brilliant')){m.color.setRGB(.94,.97,1);m.metalness=0;m.roughness=.035;m.ior=2.417;m.transmission=.88;m.thickness=.0004;m.dispersion=.045;m.envMap=centralDiamondEnvironment;m.envMapIntensity=1.5;m.clearcoat=.10;m.clearcoatRoughness=.025;goldMaterials.add(m);}
  if(m.name.includes('Diamond')){m.ior=2.417;m.transmission=.46;m.thickness=.00025;m.dispersion=.15;m.envMapIntensity=1.9;}
  if(m.name.includes('Rose pink')){m.color.setRGB(.23,.032,.07);m.transmission=.12;m.thickness=.00025;m.envMapIntensity=1.4;}
  if(m.name.startsWith('Side')){if(!m.isMeshPhysicalMaterial){const p=new THREE.MeshPhysicalMaterial();THREE.MeshStandardMaterial.prototype.copy.call(p,m);m=p;}m.iridescence=.52;m.iridescenceIOR=1.34;m.iridescenceThicknessRange=[210,420];if(!m.iridescenceMap)m.iridescenceMap=new THREE.TextureLoader().load(m.name.includes('Side 1')?'textures/side1-pearl.png':'textures/side2-pearl.png');m.clearcoat=.18;m.clearcoatRoughness=.23;}
  if(software&&m.isMeshPhysicalMaterial){m.transmission=0;m.dispersion=0;}
+ if(m.name.startsWith('Central brilliant')){
+  // Real-time approximation of pavilion reflections inside the crown/table.
+  // All original card/gem materials use their existing shaders unchanged.
+  if(software){m.metalness=.68;m.roughness=.055;m.envMapIntensity=2.0;}
+  m.onBeforeCompile=shader=>{
+   shader.vertexShader='varying vec2 vBrilliantUV; varying vec3 vBrilliantX; varying vec3 vBrilliantY; varying vec3 vBrilliantZ;\n'+shader.vertexShader;
+   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+    vBrilliantUV=uv*2.0-1.0;vBrilliantX=normalize(normalMatrix*vec3(1,0,0));vBrilliantY=normalize(normalMatrix*vec3(0,0,-1));vBrilliantZ=normalize(normalMatrix*vec3(0,-1,0));`);
+   shader.fragmentShader='varying vec2 vBrilliantUV; varying vec3 vBrilliantX; varying vec3 vBrilliantY; varying vec3 vBrilliantZ;\n'+shader.fragmentShader;
+   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+    float radius=length(vBrilliantUV);
+    if(radius<.49){
+      float angle=atan(vBrilliantUV.y,vBrilliantUV.x)+3.14159265;
+      float sector=floor(angle/0.39269908);
+      float localAngle=fract(angle/0.39269908);
+      float band=step(.23+abs(localAngle-.5)*.16,radius);
+      float direction=(sector+.5)*.39269908-3.14159265+band*.32;
+      float tilt=mix(.36,.82,band)+mod(sector,2.0)*.19;
+      normal=normalize(vBrilliantZ+tilt*(cos(direction)*vBrilliantX+sin(direction)*vBrilliantY));
+    }`);
+   shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`
+    float opticalRadius=length(vBrilliantUV);
+    if(opticalRadius<.49){
+      float facing=abs(dot(normal,normalize(vViewPosition)));
+      float opticalReturn=.24+1.35*pow(facing,8.0)+.65*pow(facing,56.0);
+      outgoingLight*=opticalReturn;
+    }
+    #include <opaque_fragment>`);
+  };
+  m.customProgramCacheKey=()=> 'central-brilliant-optics-2';
+ }
+
  const idx=mats.findIndex(x=>x.name===m.name);if(idx>=0)mats[idx]=m;
  }
  o.material=Array.isArray(o.material)?mats:mats[0];original.set(o,o.material);
