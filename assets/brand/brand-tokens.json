@@ -1,0 +1,26 @@
+{
+  "source": "User-provided Rosan Diamond - Brand Guideline V1.pdf",
+  "logo_page": 10,
+  "palette_page": 11,
+  "typography_pages": [
+    18,
+    19
+  ],
+  "colors": {
+    "richBlack": "#161D27",
+    "spaceCadet": "#263049",
+    "sunset": "#F0C88F",
+    "wheat": "#F2DFB3",
+    "platinum": "#DADEE1",
+    "night": "#101010"
+  },
+  "brand_fonts": [
+    "Meira",
+    "Nohemi"
+  ],
+  "web_fallbacks": [
+    "Cormorant Garamond",
+    "Manrope"
+  ],
+  "font_note": "Original font files were not supplied; exact logo curves extracted from the PDF."
+}

@@ -1,4 +1,4 @@
-import {createStudio} from './photographic-studio.js?v=studio-palette-31';
+import {createStudio} from './photographic-studio.js?v=rosan-37';
 import {applyBrilliantOptics} from './diamond-optics.js?v=brilliant-recut-21';
 import * as THREE from 'three';
 import {TrackballControls} from 'three/addons/controls/TrackballControls.js';
@@ -73,7 +73,7 @@ $('light').oninput=e=>renderer.toneMappingExposure=Number(e.target.value);
 $('light-angle').oninput=e=>{scene.environmentRotation.y=Number(e.target.value)*Math.PI/180;goldMaterials.forEach(m=>m.envMapRotation.copy(scene.environmentRotation));dirty=true;};
 $('edge').onclick=()=>{stop();controls.reset();camera.position.set(0,0,innerWidth<650?.28:.18);controls.target.set(0,0,0);target=new THREE.Quaternion().setFromEuler(new THREE.Euler(.10,1.20,-.06));controls.update();};
 $('clay').onclick=()=>{clay=!clay;original.forEach((m,o)=>o.material=clay?clayMat:m);$('clay').textContent=clay?'Вернуть материалы':'Посмотреть форму';};
-document.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-bg]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const type=b.dataset.bg;studio.setTheme(type);document.body.classList.toggle('pale',type!=='dark');});
+document.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-bg]').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-pressed','false');});b.classList.add('active');b.setAttribute('aria-pressed','true');const type=b.dataset.bg;studio.setTheme(type);document.body.classList.toggle('pale',type!=='dark');});
 $('fullscreen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen();};
 $('capture').onclick=()=>{renderer.render(scene,camera);const a=document.createElement('a');a.href=renderer.domElement.toDataURL('image/png');a.download='MIR-SUPREME-view.png';a.click();};
 let resumeAfterGesture=false;
@@ -85,7 +85,7 @@ controls.addEventListener('end',()=>{
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);controls.handleResize();});
 controls.addEventListener('change',()=>dirty=true);document.addEventListener('click',()=>dirty=true);document.addEventListener('input',()=>dirty=true);addEventListener('resize',()=>dirty=true);
 const previousCameraPosition=new THREE.Vector3();const previousCameraQuaternion=new THREE.Quaternion();
-const autoSpinSpeed=.24,secondarySpinRatio=.20,fullTurn=Math.PI*2;let autoSpinPhase=0,secondarySpinDirection=1,last=performance.now();function advanceAutoSpin(step){pivot.rotation.y+=step;while(step>0){const part=Math.min(step,fullTurn-autoSpinPhase);pivot.rotation.x+=part*secondarySpinRatio*secondarySpinDirection;autoSpinPhase+=part;step-=part;if(autoSpinPhase>=fullTurn-1e-9){autoSpinPhase=0;secondarySpinDirection*=-1;}}}function tick(now){const dt=Math.min((now-last)/1000,.5);last=now;if(loaded){if(rotating){advanceAutoSpin(dt*autoSpinSpeed);dirty=true;}if(target){pivot.quaternion.slerp(target,1-Math.exp(-dt*7));dirty=true;if(pivot.quaternion.angleTo(target)<.001)target=null;}}controls.update();if(previousCameraPosition.distanceToSquared(camera.position)>1e-14 || 1-Math.abs(previousCameraQuaternion.dot(camera.quaternion))>1e-12){dirty=true;previousCameraPosition.copy(camera.position);previousCameraQuaternion.copy(camera.quaternion);}if(dirty){studio.update();renderer.render(scene,camera);dirty=false;}requestAnimationFrame(tick);}requestAnimationFrame(tick);
+const autoSpinSpeed=.24,secondarySpinRatio=.20,fullTurn=Math.PI*2;let autoSpinPhase=0,secondarySpinDirection=1,last=performance.now();function advanceAutoSpin(step){pivot.rotation.y+=step;while(step>0){const part=Math.min(step,fullTurn-autoSpinPhase);pivot.rotation.x+=part*secondarySpinRatio*secondarySpinDirection;autoSpinPhase+=part;step-=part;if(autoSpinPhase>=fullTurn-1e-9){autoSpinPhase=0;secondarySpinDirection*=-1;}}}function tick(now){const dt=Math.min((now-last)/1000,.5);last=now;if(loaded){if(rotating){advanceAutoSpin(dt*autoSpinSpeed);dirty=true;}if(target){pivot.quaternion.slerp(target,1-Math.exp(-dt*7));dirty=true;if(pivot.quaternion.angleTo(target)<.001)target=null;}}controls.update();if(previousCameraPosition.distanceToSquared(camera.position)>1e-14 || 1-Math.abs(previousCameraQuaternion.dot(camera.quaternion))>1e-12){dirty=true;previousCameraPosition.copy(camera.position);previousCameraQuaternion.copy(camera.quaternion);}if(dirty){studio.update(pivot.rotation.y);renderer.render(scene,camera);dirty=false;}requestAnimationFrame(tick);}requestAnimationFrame(tick);
 
 
 
