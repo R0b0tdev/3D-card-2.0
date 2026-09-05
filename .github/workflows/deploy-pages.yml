@@ -26,10 +26,10 @@ jobs:
       - run: npm ci
       - name: Assemble static site
         run: |
-          mkdir -p _site/output _site/node_modules
-          cp index.html style.css viewer.js photographic-studio.js diamond-optics.js lunar-backdrop.js _site/
+          mkdir -p _site/output _site/node_modules _site/assets
+          cp index.html style.css viewer.js photographic-studio.js diamond-optics.js _site/
           cp output/jewellery-card.glb _site/output/
-          cp -R assets _site/assets
+          cp -R assets/brand assets/fonts _site/assets/
           cp -R node_modules/three _site/node_modules/three
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5

@@ -1,6 +1,0 @@
-NASA's Scientific Visualization Studio
-CGI Moon Kit: https://svs.gsfc.nasa.gov/4720
-Color: LROC WAC / NASA / GSFC / Arizona State University
-Elevation: LRO LOLA
-Visualizer: Ernie Wright; scientist: Noah Petro
-Maps downloaded unchanged for a decorative 3D scene; scene scale and motion are artistic, not an astronomical simulation.

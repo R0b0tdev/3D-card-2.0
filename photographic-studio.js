@@ -1,8 +1,6 @@
-import {createLunarBackdrop} from './lunar-backdrop.js?v=rosan-37';
 import * as THREE from 'three';
 
 export function createStudio(scene,renderer,software){
- const lunar=createLunarBackdrop(scene,renderer);
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
  renderer.shadowMap.autoUpdate=false;
  const key=new THREE.SpotLight(0xfff3df,.11,1,Math.PI*.30,.8,2);
@@ -74,8 +72,8 @@ export function createStudio(scene,renderer,software){
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(2,2),shadowMaterial);
  ground.name='Transparent studio shadow receiver';ground.rotation.x=-Math.PI/2;ground.position.y=-.056;ground.receiveShadow=true;scene.add(ground);
  const themes={dark:['#161d27','#263049'],sand:['#e9e3d8','#fffaf1'],light:['#efd0da','#fff0f5']};
- function setTheme(name){const t=themes[name]||themes.dark;uniforms.pastelLow.value.set(t[0]);uniforms.pastelHigh.value.set(t[1]);scene.background.set(t[0]);uniforms.compositionStrength.value=name==='dark'?.12:1;uniforms.textureStrength.value=name==='dark'?.38:.85;lunar.group.visible=name==='dark';}
+ function setTheme(name){const t=themes[name]||themes.dark;uniforms.pastelLow.value.set(t[0]);uniforms.pastelHigh.value.set(t[1]);scene.background.set(t[0]);uniforms.compositionStrength.value=name==='dark'?.12:1;uniforms.textureStrength.value=name==='dark'?.38:.85;}
  function setComposition(value){uniforms.composition.value=Number(value);}
- function update(spinAngle=0){lunar.update(spinAngle);renderer.shadowMap.needsUpdate=true;}
- setTheme('dark');return {setTheme,setComposition,update,key,backdrop,ground,lunar};
+ function update(){renderer.shadowMap.needsUpdate=true;}
+ setTheme('dark');return {setTheme,setComposition,update,key,backdrop,ground};
 }
