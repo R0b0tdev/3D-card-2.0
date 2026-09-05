@@ -13,63 +13,60 @@ GROUPS={
  'lower_scroll':[(253,556,17),(225,590,21)],
  'lower_chain':[(56,582,12),(83,634,12),(123,679,12),(123,729,18),(171,715,13),(223,741,12),(279,755,12)],
  'lower_fan':[(60,778,17),(53,819,17),(95,804,17)]}
+# Build one convex round brilliant in radius-normalized optical coordinates.
+import bmesh,numpy as np
+bm=bmesh.new()
+N=48
+for z in [0,-.025]:
+ for j in range(N):
+  a=j*math.tau/N;bm.verts.new((math.cos(a),math.sin(a),z))
+for j in range(8):
+ a=j*math.tau/8
+ bm.verts.new((.53*math.cos(a),.53*math.sin(a),.32))
+ a+=math.pi/8
+ star_z=.32/(1-.53)*(1-.78*math.cos(math.pi/8))
+ bm.verts.new((.78*math.cos(a),.78*math.sin(a),star_z))
+ bm.verts.new((.72*math.cos(a),.72*math.sin(a),-.30))
+ bm.verts.new((.008*math.cos(a),.008*math.sin(a),-.86))
+bmesh.ops.convex_hull(bm,input=list(bm.verts),use_existing_faces=False)
+bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+bm.verts.ensure_lookup_table();bm.verts.index_update()
+unit=[tuple(v.co) for v in bm.verts];unitfaces=[tuple(v.index for v in f.verts) for f in bm.faces]
+planes=[]
+for f in bm.faces:
+ n=f.normal;d=n.dot(f.verts[0].co)
+ q=np.array([*n,d])
+ if not any(np.linalg.norm(q-np.array(v))<1e-4 for v in planes):planes.append(q.tolist())
+bm.free()
 for ob in list(bpy.data.objects):
  if ob.name.startswith('03 • central brilliants'):bpy.data.objects.remove(ob,do_unlink=True)
-mat=bpy.data.materials.get('Central brilliant • colourless diamond')
-if mat is None:mat=bpy.data.materials.new('Central brilliant • colourless diamond')
-mat.use_nodes=True
-bs=mat.node_tree.nodes.get('Principled BSDF')
-bs.inputs['Base Color'].default_value=(.94,.97,1,1)
-bs.inputs['Metallic'].default_value=0
-bs.inputs['Roughness'].default_value=.035
-bs.inputs['IOR'].default_value=2.417
-bs.inputs['Transmission Weight'].default_value=.88
-bs.inputs['Coat Weight'].default_value=.10
-bs.inputs['Coat Roughness'].default_value=.025
+mat=bpy.data.materials.get('Central brilliant • colourless diamond') or bpy.data.materials.new('Central brilliant • colourless diamond')
+mat.use_nodes=True;bs=mat.node_tree.nodes.get('Principled BSDF')
+bs.inputs['Base Color'].default_value=(.985,.99,1,1)
+bs.inputs['Metallic'].default_value=0;bs.inputs['Roughness'].default_value=.025
+bs.inputs['IOR'].default_value=2.417;bs.inputs['Transmission Weight'].default_value=1
+bs.inputs['Coat Weight'].default_value=0
 shell=next(o for o in bpy.context.scene.objects if o.name.startswith('01 •'))
-vv=[];ff=[];records=[]
+vv=[];ff=[];records=[];localuv=[]
 for group,points in GROUPS.items():
  for cx,cy,rad in points:
   u=(260+cx/1.5)/1247;v=(690+cy/1.5)/1990
   x=(u-.5)*.05398;y=(v-.5)*.08560;r=rad/1.5/1247*.05398
-  # Seat each girdle on the existing local relief without altering the gold.
   heights=[]
-  for j in range(9):
-   a=j*math.tau/8;rr=0 if j==8 else r*.7
-   hit,loc,n,idx=shell.ray_cast(Vector((x+rr*math.cos(a),y+rr*math.sin(a),-.004)),Vector((0,0,1)))
+  for j in range(16):
+   a=j*math.tau/16
+   hit,loc,n,idx=shell.ray_cast(Vector((x+r*.94*math.cos(a),y+r*.94*math.sin(a),-.004)),Vector((0,0,1)))
    if hit:heights.append(-loc.z)
-  base=max(heights,default=.00049)+.000008
-  crown=min(.00028,max(.00018,r*.48))
-  off=len(vv);N=64
-  # Round 64-sided girdle; sixteen optical sectors, star/lower-crown facets.
-  rings=[(.06,-r*.50),(1,0),(1,.000025),(.80,crown*.48),(.48,crown)]
-  for k,(rr,h) in enumerate(rings):
-   for j in range(N):
-    a=j*math.tau/N
-    if k>=3:
-     sector=j//4;t=(j%4)/4
-     a0=sector*math.tau/16;a1=(sector+1)*math.tau/16
-     px=(1-t)*math.cos(a0)+t*math.cos(a1);py=(1-t)*math.sin(a0)+t*math.sin(a1)
-     if k==3:hlocal=h*(1.12 if j%4==0 else .94)
-     else:hlocal=h
-    else:px=math.cos(a);py=math.sin(a);hlocal=h
-    vv.append((x+r*rr*px,y+r*rr*py,-base-hlocal))
-  local=[tuple(range(N-1,-1,-1))]
-  for k in range(len(rings)-1):
-   for j in range(N):
-    a=k*N+j;b=k*N+(j+1)%N;c=b+N;d=a+N
-    if k>=2:local.extend([(a,b,c),(a,c,d)])
-    else:local.append((a,b,c,d))
-  local.append(tuple(range((len(rings)-1)*N,len(rings)*N)))
-  ff.extend([tuple(off+i for i in reversed(face)) for face in local])
-  records.append({'group':group,'u':u,'v':v,'radius_mm':r*1000,'crown_mm':crown*1000,'base_mm':base*1000})
-mesh=bpy.data.meshes.new('25 round central brilliants • side 2');mesh.from_pydata(vv,[],ff);mesh.materials.append(mat);mesh.update()
+  base=max(heights,default=.00049)+.000002
+  off=len(vv)
+  for px,py,pz in unit:vv.append((x+r*px,y+r*py,-base-r*pz));localuv.append((px*.5+.5,py*.5+.5))
+  ff.extend([tuple(off+i for i in reversed(face)) for face in unitfaces])
+  records.append({'group':group,'u':u,'v':v,'radius_mm':r*1000,'crown_mm':r*.32*1000,'base_mm':base*1000})
+mesh=bpy.data.meshes.new('25 recut round brilliants • thin girdle');mesh.from_pydata(vv,[],ff);mesh.materials.append(mat);mesh.update()
 uv=mesh.uv_layers.new(name='Brilliant optical coordinates')
-for loop in mesh.loops:
- rec=records[loop.vertex_index//320];co=mesh.vertices[loop.vertex_index].co
- cx=(rec['u']-.5)*.05398;cy=(rec['v']-.5)*.08560;radius=rec['radius_mm']/1000
- uv.data[loop.index].uv=((co.x-cx)/radius*.5+.5,(co.y-cy)/radius*.5+.5)
+for loop in mesh.loops:uv.data[loop.index].uv=localuv[loop.vertex_index]
 obj=bpy.data.objects.new('03 • central brilliants | logo side only',mesh);bpy.context.scene.collection.objects.link(obj)
-obj['stone_count']=len(records);obj['photo_side']=2;obj['registration']=json.dumps(records)
+obj['stone_count']=len(records);obj['photo_side']=2;obj['registration']=json.dumps(records);obj['optical_planes']=json.dumps(planes)
+obj['cut']='Round brilliant: table, star facets, crown, thin girdle and pavilion'
 (P/'output/central-diamonds.json').write_text(json.dumps(records,indent=2))
-print('CENTRAL_DIAMONDS',len(records),flush=True)
+print('RECUT_BRILLIANTS',len(records),'optical planes',len(planes),'unit vertices',len(unit),flush=True)

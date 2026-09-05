@@ -1,3 +1,5 @@
+import {createStudio} from './photographic-studio.js?v=studio-23';
+import {applyBrilliantOptics} from './diamond-optics.js?v=brilliant-recut-21';
 import * as THREE from 'three';
 import {TrackballControls} from 'three/addons/controls/TrackballControls.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -25,6 +27,9 @@ for(const [x,y,z,w,h,power] of [[-3,1,2,1.3,7,2.6],[3,0,1,.45,7,4],[0,0,4,3.8,5,
  card.position.set(x,y,z);card.lookAt(0,0,0);goldStudio.add(card);
 }
 const goldEnvironment=pmrem.fromScene(goldStudio,.015).texture;
+// Broad feathered reflections on the rolled rim prevent a narrow strip reading as a seam.
+// Keep the original jewellery environment on all face ornaments and settings.
+const edgeEnvironment=pmrem.fromScene(goldStudio,.16).texture;
 const diamondStudio=new THREE.Scene();diamondStudio.background=new THREE.Color(.18,.18,.18);
 for(const [x,y,z,w,h,power] of [[-3,2,2,1.5,4,5],[3,0,2,.65,4,7],[0,3,-2,3,1.1,4],[0,-3,1,1.7,1.4,2],[0,0,4,1.2,1.2,3]]){
  const panel=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(power,power,power),side:THREE.DoubleSide}));
@@ -32,6 +37,7 @@ for(const [x,y,z,w,h,power] of [[-3,2,2,1.5,4,5],[3,0,2,.65,4,7],[0,3,-2,3,1.1,4
 }
 const centralDiamondEnvironment=pmrem.fromScene(diamondStudio,.005).texture;
 const goldMaterials=new Set();
+const studio=createStudio(scene,renderer,software);window.viewerStudio=studio;
 const controls=new TrackballControls(camera,renderer.domElement);controls.noPan=true;controls.minDistance=.064;controls.maxDistance=.45;controls.rotateSpeed=2.5;controls.zoomSpeed=1.05;controls.staticMoving=true;
 const pivot=new THREE.Group();scene.add(pivot);
 let loaded=false,rotating=false,clay=false,target=null,zoomed=false,dirty=true; THREE.DefaultLoadingManager.onLoad=()=>dirty=true;
@@ -39,47 +45,17 @@ const original=new Map();const clayMat=new THREE.MeshStandardMaterial({color:'#c
 function home(){controls.reset();camera.position.set(0,0,innerWidth<650?.28:.215);controls.target.set(0,0,0);pivot.rotation.set(Math.PI+.075,-.19,Math.PI-.035);zoomed=false;target=null;controls.update();}
 home();
 const draco=new DRACOLoader();draco.setDecoderPath('./node_modules/three/examples/jsm/libs/draco/gltf/');
-new GLTFLoader().setDRACOLoader(draco).load('output/jewellery-card.glb?v=central-brilliants-19',gltf=>{
+new GLTFLoader().setDRACOLoader(draco).load('output/jewellery-card.glb?v=brilliant-recut-21',gltf=>{
  const root=gltf.scene;root.rotation.x=Math.PI/2;root.rotateOnWorldAxis(new THREE.Vector3(0,0,1),Math.PI);pivot.add(root);
- root.traverse(o=>{if(!o.isMesh)return;o.frustumCulled=false;const mats=Array.isArray(o.material)?o.material:[o.material];
+ root.traverse(o=>{if(!o.isMesh)return;o.frustumCulled=false;o.castShadow=true;const mats=Array.isArray(o.material)?o.material:[o.material];
  for(let m of mats){m.envMapIntensity=1.35;if(m.map)m.map.anisotropy=renderer.capabilities.getMaxAnisotropy();if(m.normalMap)m.normalMap.anisotropy=8;
- if(m.name.startsWith('Au')){m.envMap=goldEnvironment;m.envMapIntensity=1.65;m.roughness=.115;if(m.name.startsWith('Au edge')){m.roughness=.30;m.envMapIntensity=1.1;m.clearcoat=0;}goldMaterials.add(m);}
+ if(m.name.startsWith('Au')){m.envMap=goldEnvironment;m.envMapIntensity=1.65;m.roughness=.115;if(m.name.startsWith('Au edge')){m.envMap=edgeEnvironment;m.roughness=.34;m.envMapIntensity=1.1;m.clearcoat=0;}goldMaterials.add(m);}
  if(m.name.startsWith('Central brilliant')){m.color.setRGB(.94,.97,1);m.metalness=0;m.roughness=.035;m.ior=2.417;m.transmission=.88;m.thickness=.0004;m.dispersion=.045;m.envMap=centralDiamondEnvironment;m.envMapIntensity=1.5;m.clearcoat=.10;m.clearcoatRoughness=.025;goldMaterials.add(m);}
  if(m.name.includes('Diamond')){m.ior=2.417;m.transmission=.46;m.thickness=.00025;m.dispersion=.15;m.envMapIntensity=1.9;}
  if(m.name.includes('Rose pink')){m.color.setRGB(.23,.032,.07);m.transmission=.12;m.thickness=.00025;m.envMapIntensity=1.4;}
  if(m.name.startsWith('Side')){if(!m.isMeshPhysicalMaterial){const p=new THREE.MeshPhysicalMaterial();THREE.MeshStandardMaterial.prototype.copy.call(p,m);m=p;}m.iridescence=.52;m.iridescenceIOR=1.34;m.iridescenceThicknessRange=[210,420];if(!m.iridescenceMap)m.iridescenceMap=new THREE.TextureLoader().load(m.name.includes('Side 1')?'textures/side1-pearl.png':'textures/side2-pearl.png');m.clearcoat=.18;m.clearcoatRoughness=.23;}
  if(software&&m.isMeshPhysicalMaterial){m.transmission=0;m.dispersion=0;}
- if(m.name.startsWith('Central brilliant')){
-  // Real-time approximation of pavilion reflections inside the crown/table.
-  // All original card/gem materials use their existing shaders unchanged.
-  if(software){m.metalness=.68;m.roughness=.055;m.envMapIntensity=2.0;}
-  m.onBeforeCompile=shader=>{
-   shader.vertexShader='varying vec2 vBrilliantUV; varying vec3 vBrilliantX; varying vec3 vBrilliantY; varying vec3 vBrilliantZ;\n'+shader.vertexShader;
-   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
-    vBrilliantUV=uv*2.0-1.0;vBrilliantX=normalize(normalMatrix*vec3(1,0,0));vBrilliantY=normalize(normalMatrix*vec3(0,0,-1));vBrilliantZ=normalize(normalMatrix*vec3(0,-1,0));`);
-   shader.fragmentShader='varying vec2 vBrilliantUV; varying vec3 vBrilliantX; varying vec3 vBrilliantY; varying vec3 vBrilliantZ;\n'+shader.fragmentShader;
-   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
-    float radius=length(vBrilliantUV);
-    if(radius<.49){
-      float angle=atan(vBrilliantUV.y,vBrilliantUV.x)+3.14159265;
-      float sector=floor(angle/0.39269908);
-      float localAngle=fract(angle/0.39269908);
-      float band=step(.23+abs(localAngle-.5)*.16,radius);
-      float direction=(sector+.5)*.39269908-3.14159265+band*.32;
-      float tilt=mix(.36,.82,band)+mod(sector,2.0)*.19;
-      normal=normalize(vBrilliantZ+tilt*(cos(direction)*vBrilliantX+sin(direction)*vBrilliantY));
-    }`);
-   shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`
-    float opticalRadius=length(vBrilliantUV);
-    if(opticalRadius<.49){
-      float facing=abs(dot(normal,normalize(vViewPosition)));
-      float opticalReturn=.24+1.35*pow(facing,8.0)+.65*pow(facing,56.0);
-      outgoingLight*=opticalReturn;
-    }
-    #include <opaque_fragment>`);
-  };
-  m.customProgramCacheKey=()=> 'central-brilliant-optics-2';
- }
+ if(m.name.startsWith('Central brilliant')){applyBrilliantOptics(o,m);}
 
  const idx=mats.findIndex(x=>x.name===m.name);if(idx>=0)mats[idx]=m;
  }
@@ -97,14 +73,14 @@ $('light').oninput=e=>renderer.toneMappingExposure=Number(e.target.value);
 $('light-angle').oninput=e=>{scene.environmentRotation.y=Number(e.target.value)*Math.PI/180;goldMaterials.forEach(m=>m.envMapRotation.copy(scene.environmentRotation));dirty=true;};
 $('edge').onclick=()=>{stop();controls.reset();camera.position.set(0,0,innerWidth<650?.28:.18);controls.target.set(0,0,0);target=new THREE.Quaternion().setFromEuler(new THREE.Euler(.10,1.20,-.06));controls.update();};
 $('clay').onclick=()=>{clay=!clay;original.forEach((m,o)=>o.material=clay?clayMat:m);$('clay').textContent=clay?'Вернуть материалы':'Посмотреть форму';};
-document.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-bg]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const type=b.dataset.bg;scene.background.set({dark:'#101311',sand:'#b5a389',light:'#dedfd8'}[type]);document.body.classList.toggle('pale',type!=='dark');});
+document.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-bg]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const type=b.dataset.bg;studio.setTheme(type);document.body.classList.toggle('pale',type!=='dark');});
 $('fullscreen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen();};
 $('capture').onclick=()=>{renderer.render(scene,camera);const a=document.createElement('a');a.href=renderer.domElement.toDataURL('image/png');a.download='MIR-SUPREME-view.png';a.click();};
 controls.addEventListener('start',()=>{stop();target=null;});
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);controls.handleResize();});
 controls.addEventListener('change',()=>dirty=true);document.addEventListener('click',()=>dirty=true);document.addEventListener('input',()=>dirty=true);addEventListener('resize',()=>dirty=true);
 const previousCameraPosition=new THREE.Vector3();const previousCameraQuaternion=new THREE.Quaternion();
-const autoSpinSpeed=.24,secondarySpinRatio=.10,fullTurn=Math.PI*2;let autoSpinPhase=0,secondarySpinDirection=1,last=performance.now();function advanceAutoSpin(step){pivot.rotation.y+=step;while(step>0){const part=Math.min(step,fullTurn-autoSpinPhase);pivot.rotation.x+=part*secondarySpinRatio*secondarySpinDirection;autoSpinPhase+=part;step-=part;if(autoSpinPhase>=fullTurn-1e-9){autoSpinPhase=0;secondarySpinDirection*=-1;}}}function tick(now){const dt=Math.min((now-last)/1000,.5);last=now;if(loaded){if(rotating){advanceAutoSpin(dt*autoSpinSpeed);dirty=true;}if(target){pivot.quaternion.slerp(target,1-Math.exp(-dt*7));dirty=true;if(pivot.quaternion.angleTo(target)<.001)target=null;}}controls.update();if(previousCameraPosition.distanceToSquared(camera.position)>1e-14 || 1-Math.abs(previousCameraQuaternion.dot(camera.quaternion))>1e-12){dirty=true;previousCameraPosition.copy(camera.position);previousCameraQuaternion.copy(camera.quaternion);}if(dirty){renderer.render(scene,camera);dirty=false;}requestAnimationFrame(tick);}requestAnimationFrame(tick);
+const autoSpinSpeed=.24,secondarySpinRatio=.10,fullTurn=Math.PI*2;let autoSpinPhase=0,secondarySpinDirection=1,last=performance.now();function advanceAutoSpin(step){pivot.rotation.y+=step;while(step>0){const part=Math.min(step,fullTurn-autoSpinPhase);pivot.rotation.x+=part*secondarySpinRatio*secondarySpinDirection;autoSpinPhase+=part;step-=part;if(autoSpinPhase>=fullTurn-1e-9){autoSpinPhase=0;secondarySpinDirection*=-1;}}}function tick(now){const dt=Math.min((now-last)/1000,.5);last=now;if(loaded){if(rotating){advanceAutoSpin(dt*autoSpinSpeed);dirty=true;}if(target){pivot.quaternion.slerp(target,1-Math.exp(-dt*7));dirty=true;if(pivot.quaternion.angleTo(target)<.001)target=null;}}controls.update();if(previousCameraPosition.distanceToSquared(camera.position)>1e-14 || 1-Math.abs(previousCameraQuaternion.dot(camera.quaternion))>1e-12){dirty=true;previousCameraPosition.copy(camera.position);previousCameraQuaternion.copy(camera.quaternion);}if(dirty){studio.update();renderer.render(scene,camera);dirty=false;}requestAnimationFrame(tick);}requestAnimationFrame(tick);
 
 
 

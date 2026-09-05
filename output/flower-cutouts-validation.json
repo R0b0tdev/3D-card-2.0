@@ -1,0 +1,12 @@
+{
+  "all_gem_and_setting_meshes_unchanged": true,
+  "all_original_textures_unchanged": true,
+  "central_diamonds_unchanged": true,
+  "modified_openings": 4,
+  "gem_hashes": {
+    "03 \u2022 central brilliants | logo side only": "bbbd1601d7c27577613129a436e51f9133513c305df558912ead4d6b7b17436e",
+    "02 \u2022 ruby": "60fa55de88c86f0f53fa7bbd73be6c8befbe7c39c8e2c6b99d05b60f2c9f679d",
+    "02 \u2022 diamond": "b707e889f19fe79d885d092cd185ebfa741e55609cf7792dd9b78c3a6a748140",
+    "02 \u2022 bezels": "bf5731456a777fa794fff5ba76d38c165ebb8731c5b7c5d0ec3069ee4eb87ac6"
+  }
+}

@@ -5,24 +5,46 @@
   "core_thickness_mm": 0.76,
   "cutout_count": 24,
   "support_bridges": 0,
-  "cutout_area_percent": 4.68,
-  "surface_triangles_per_side": 210003,
+  "cutout_area_percent": 4.78,
+  "surface_triangles_per_side": 213865,
   "gemstones_per_side": [
     256,
     248
   ],
   "reconstruction": "Photographic interpretation; material species and relief depths are not measured.",
-  "glb_bytes": 56673616,
+  "glb_bytes": 57142056,
   "shell_nonmanifold_edges": 0,
   "blender_version": "4.5.3 LTS",
-  "total_mesh_vertices": 1667832,
+  "total_mesh_vertices": 1833908,
   "outer_roll_radius_mm": 0.3,
   "cutout_roll_radius_mm": 0.18,
-  "rounded_rim_vertices": 1216768,
+  "rounded_rim_vertices": 1362540,
   "rim_cleanup": {
     "cutouts": 24,
     "smooth_contours": true,
     "texture_maps_unchanged": true,
     "gemstones_unchanged": true
+  },
+  "flower_cutout_refinement": {
+    "openings_changed": 4,
+    "outside_triangles_preserved": 204962,
+    "old_areas_mm2": [
+      1.4441874521901883,
+      1.373721189712623,
+      1.6851666929124622,
+      1.4917948218973804
+    ],
+    "new_areas_mm2": [
+      2.969889385279752,
+      2.7420865158773458,
+      2.6562183863631463,
+      2.4081806993400097
+    ],
+    "scope_mm": [
+      -11.087962165909273,
+      -4.820559072295056,
+      -1.0873419872039691,
+      4.334655051709413
+    ]
   }
 }
