@@ -1,4 +1,4 @@
-import {createStudio} from './photographic-studio.js?v=studio-23';
+import {createStudio} from './photographic-studio.js?v=studio-palette-31';
 import {applyBrilliantOptics} from './diamond-optics.js?v=brilliant-recut-21';
 import * as THREE from 'three';
 import {TrackballControls} from 'three/addons/controls/TrackballControls.js';
@@ -61,7 +61,7 @@ new GLTFLoader().setDRACOLoader(draco).load('output/jewellery-card.glb?v=brillia
  }
  o.material=Array.isArray(o.material)?mats:mats[0];original.set(o,o.material);
  });
- loaded=true;$('loading').style.display='none';window.viewerReady=true;window.viewerModel=root;window.viewerScene=scene;window.viewerCamera=camera;window.viewerRenderer=renderer;window.viewerPivot=pivot;
+ loaded=true;rotating=true;autoSpinPhase=0;secondarySpinDirection=1;last=performance.now();$('rotate').classList.add('active');$('rotate').setAttribute('aria-pressed','true');$('loading').style.display='none';window.viewerReady=true;window.viewerModel=root;window.viewerScene=scene;window.viewerCamera=camera;window.viewerRenderer=renderer;window.viewerPivot=pivot;
 },e=>{$('progress').textContent=e.total?`Загрузка объекта · ${Math.round(e.loaded/e.total*100)}%`:'Загрузка ювелирного объекта…';},error=>{$('loading').style.display='none';$('error').hidden=false;$('error').textContent='Не удалось загрузить модель. Запустите локальный сервер через start-viewer.cmd и откройте http://localhost:8765. '+error.message;console.error(error);});
 function stop(){rotating=false;$('rotate').classList.remove('active');$('rotate').setAttribute('aria-pressed','false');}
 function preset(back){stop();controls.reset();camera.position.set(0,0,innerWidth<650?.28:.215);controls.target.set(0,0,0);target=new THREE.Quaternion().setFromEuler(back?new THREE.Euler(0,0,0):new THREE.Euler(Math.PI,0,Math.PI));controls.update();}
@@ -76,11 +76,16 @@ $('clay').onclick=()=>{clay=!clay;original.forEach((m,o)=>o.material=clay?clayMa
 document.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-bg]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const type=b.dataset.bg;studio.setTheme(type);document.body.classList.toggle('pale',type!=='dark');});
 $('fullscreen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen();};
 $('capture').onclick=()=>{renderer.render(scene,camera);const a=document.createElement('a');a.href=renderer.domElement.toDataURL('image/png');a.download='MIR-SUPREME-view.png';a.click();};
-controls.addEventListener('start',()=>{stop();target=null;});
+let resumeAfterGesture=false;
+controls.addEventListener('start',()=>{resumeAfterGesture=rotating;stop();target=null;});
+controls.addEventListener('end',()=>{
+ if(resumeAfterGesture){rotating=true;last=performance.now();$('rotate').classList.add('active');$('rotate').setAttribute('aria-pressed','true');dirty=true;}
+ resumeAfterGesture=false;
+});
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);controls.handleResize();});
 controls.addEventListener('change',()=>dirty=true);document.addEventListener('click',()=>dirty=true);document.addEventListener('input',()=>dirty=true);addEventListener('resize',()=>dirty=true);
 const previousCameraPosition=new THREE.Vector3();const previousCameraQuaternion=new THREE.Quaternion();
-const autoSpinSpeed=.24,secondarySpinRatio=.10,fullTurn=Math.PI*2;let autoSpinPhase=0,secondarySpinDirection=1,last=performance.now();function advanceAutoSpin(step){pivot.rotation.y+=step;while(step>0){const part=Math.min(step,fullTurn-autoSpinPhase);pivot.rotation.x+=part*secondarySpinRatio*secondarySpinDirection;autoSpinPhase+=part;step-=part;if(autoSpinPhase>=fullTurn-1e-9){autoSpinPhase=0;secondarySpinDirection*=-1;}}}function tick(now){const dt=Math.min((now-last)/1000,.5);last=now;if(loaded){if(rotating){advanceAutoSpin(dt*autoSpinSpeed);dirty=true;}if(target){pivot.quaternion.slerp(target,1-Math.exp(-dt*7));dirty=true;if(pivot.quaternion.angleTo(target)<.001)target=null;}}controls.update();if(previousCameraPosition.distanceToSquared(camera.position)>1e-14 || 1-Math.abs(previousCameraQuaternion.dot(camera.quaternion))>1e-12){dirty=true;previousCameraPosition.copy(camera.position);previousCameraQuaternion.copy(camera.quaternion);}if(dirty){studio.update();renderer.render(scene,camera);dirty=false;}requestAnimationFrame(tick);}requestAnimationFrame(tick);
+const autoSpinSpeed=.24,secondarySpinRatio=.20,fullTurn=Math.PI*2;let autoSpinPhase=0,secondarySpinDirection=1,last=performance.now();function advanceAutoSpin(step){pivot.rotation.y+=step;while(step>0){const part=Math.min(step,fullTurn-autoSpinPhase);pivot.rotation.x+=part*secondarySpinRatio*secondarySpinDirection;autoSpinPhase+=part;step-=part;if(autoSpinPhase>=fullTurn-1e-9){autoSpinPhase=0;secondarySpinDirection*=-1;}}}function tick(now){const dt=Math.min((now-last)/1000,.5);last=now;if(loaded){if(rotating){advanceAutoSpin(dt*autoSpinSpeed);dirty=true;}if(target){pivot.quaternion.slerp(target,1-Math.exp(-dt*7));dirty=true;if(pivot.quaternion.angleTo(target)<.001)target=null;}}controls.update();if(previousCameraPosition.distanceToSquared(camera.position)>1e-14 || 1-Math.abs(previousCameraQuaternion.dot(camera.quaternion))>1e-12){dirty=true;previousCameraPosition.copy(camera.position);previousCameraQuaternion.copy(camera.quaternion);}if(dirty){studio.update();renderer.render(scene,camera);dirty=false;}requestAnimationFrame(tick);}requestAnimationFrame(tick);
 
 
 
@@ -93,3 +98,5 @@ const autoSpinSpeed=.24,secondarySpinRatio=.10,fullTurn=Math.PI*2;let autoSpinPh
 
 
 
+
+document.querySelectorAll('[data-composition]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-composition]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});studio.setComposition(b.dataset.composition);dirty=true;});
