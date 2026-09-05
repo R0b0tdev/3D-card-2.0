@@ -30,7 +30,7 @@ const controls=new TrackballControls(camera,renderer.domElement);controls.noPan=
 const pivot=new THREE.Group();scene.add(pivot);
 let loaded=false,rotating=false,clay=false,target=null,zoomed=false,dirty=true; THREE.DefaultLoadingManager.onLoad=()=>dirty=true;
 const original=new Map();const clayMat=new THREE.MeshStandardMaterial({color:'#c6b69a',metalness:.22,roughness:.48});
-function home(){controls.reset();camera.position.set(0,0,innerWidth<650?.28:.215);controls.target.set(0,0,0);pivot.rotation.set(.075,-.19,-.035);zoomed=false;target=null;controls.update();}
+function home(){controls.reset();camera.position.set(0,0,innerWidth<650?.28:.215);controls.target.set(0,0,0);pivot.rotation.set(Math.PI+.075,-.19,Math.PI-.035);zoomed=false;target=null;controls.update();}
 home();
 const draco=new DRACOLoader();draco.setDecoderPath('./node_modules/three/examples/jsm/libs/draco/gltf/');
 new GLTFLoader().setDRACOLoader(draco).load('output/jewellery-card.glb?v=soft-rounded-11',gltf=>{
@@ -49,9 +49,9 @@ new GLTFLoader().setDRACOLoader(draco).load('output/jewellery-card.glb?v=soft-ro
  loaded=true;$('loading').style.display='none';window.viewerReady=true;window.viewerModel=root;window.viewerScene=scene;window.viewerCamera=camera;window.viewerRenderer=renderer;window.viewerPivot=pivot;
 },e=>{$('progress').textContent=e.total?`Загрузка объекта · ${Math.round(e.loaded/e.total*100)}%`:'Загрузка ювелирного объекта…';},error=>{$('loading').style.display='none';$('error').hidden=false;$('error').textContent='Не удалось загрузить модель. Запустите локальный сервер через start-viewer.cmd и откройте http://localhost:8765. '+error.message;console.error(error);});
 function stop(){rotating=false;$('rotate').classList.remove('active');$('rotate').setAttribute('aria-pressed','false');}
-function preset(back){stop();controls.reset();camera.position.set(0,0,innerWidth<650?.28:.215);controls.target.set(0,0,0);target=new THREE.Quaternion().setFromEuler(new THREE.Euler(back?Math.PI:0,0,0));controls.update();}
+function preset(back){stop();controls.reset();camera.position.set(0,0,innerWidth<650?.28:.215);controls.target.set(0,0,0);target=new THREE.Quaternion().setFromEuler(back?new THREE.Euler(0,0,0):new THREE.Euler(Math.PI,0,Math.PI));controls.update();}
 $('front').onclick=()=>preset(false);$('back').onclick=()=>preset(true);
-$('rotate').onclick=()=>{rotating=!rotating;target=null;$('rotate').classList.toggle('active',rotating);$('rotate').setAttribute('aria-pressed',String(rotating));};
+$('rotate').onclick=()=>{rotating=!rotating;target=null;if(rotating){autoSpinPhase=0;secondarySpinDirection=1;}$('rotate').classList.toggle('active',rotating);$('rotate').setAttribute('aria-pressed',String(rotating));};
 $('reset').onclick=()=>{stop();home();};
 $('zoom').onclick=()=>{zoomed=!zoomed;camera.position.multiplyScalar((zoomed?.115:.215)/camera.position.length());controls.update();};
 $('light').oninput=e=>renderer.toneMappingExposure=Number(e.target.value);
@@ -65,7 +65,7 @@ controls.addEventListener('start',()=>{stop();target=null;});
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);controls.handleResize();});
 controls.addEventListener('change',()=>dirty=true);document.addEventListener('click',()=>dirty=true);document.addEventListener('input',()=>dirty=true);addEventListener('resize',()=>dirty=true);
 const previousCameraPosition=new THREE.Vector3();const previousCameraQuaternion=new THREE.Quaternion();
-let last=performance.now();function tick(now){const dt=Math.min((now-last)/1000,.5);last=now;if(loaded){if(rotating){pivot.rotation.y+=dt*.24;dirty=true;}if(target){pivot.quaternion.slerp(target,1-Math.exp(-dt*7));dirty=true;if(pivot.quaternion.angleTo(target)<.001)target=null;}}controls.update();if(previousCameraPosition.distanceToSquared(camera.position)>1e-14 || 1-Math.abs(previousCameraQuaternion.dot(camera.quaternion))>1e-12){dirty=true;previousCameraPosition.copy(camera.position);previousCameraQuaternion.copy(camera.quaternion);}if(dirty){renderer.render(scene,camera);dirty=false;}requestAnimationFrame(tick);}requestAnimationFrame(tick);
+const autoSpinSpeed=.24,secondarySpinRatio=.10,fullTurn=Math.PI*2;let autoSpinPhase=0,secondarySpinDirection=1,last=performance.now();function advanceAutoSpin(step){pivot.rotation.y+=step;while(step>0){const part=Math.min(step,fullTurn-autoSpinPhase);pivot.rotation.x+=part*secondarySpinRatio*secondarySpinDirection;autoSpinPhase+=part;step-=part;if(autoSpinPhase>=fullTurn-1e-9){autoSpinPhase=0;secondarySpinDirection*=-1;}}}function tick(now){const dt=Math.min((now-last)/1000,.5);last=now;if(loaded){if(rotating){advanceAutoSpin(dt*autoSpinSpeed);dirty=true;}if(target){pivot.quaternion.slerp(target,1-Math.exp(-dt*7));dirty=true;if(pivot.quaternion.angleTo(target)<.001)target=null;}}controls.update();if(previousCameraPosition.distanceToSquared(camera.position)>1e-14 || 1-Math.abs(previousCameraQuaternion.dot(camera.quaternion))>1e-12){dirty=true;previousCameraPosition.copy(camera.position);previousCameraQuaternion.copy(camera.quaternion);}if(dirty){renderer.render(scene,camera);dirty=false;}requestAnimationFrame(tick);}requestAnimationFrame(tick);
 
 
 
