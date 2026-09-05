@@ -1,0 +1,32 @@
+{
+  "glb_valid_header": true,
+  "self_contained_images": true,
+  "mesh_parts": 5,
+  "materials": [
+    "Side 1 • gold / nacre / mineral inlay",
+    "Side 2 • gold / nacre / mineral inlay",
+    "Au edge • softly polished yellow gold",
+    "Rose pink gemstone • interpreted material",
+    "Diamond • faceted optical material",
+    "Au • polished yellow gold",
+    "Central brilliant • colourless diamond"
+  ],
+  "textured_surface_materials": 2,
+  "extensions": [
+    "KHR_draco_mesh_compression",
+    "KHR_materials_clearcoat",
+    "KHR_materials_transmission",
+    "KHR_materials_ior",
+    "KHR_materials_iridescence"
+  ],
+  "browser": "Chromium 153; front/back/materials/background/rotation/mobile checked",
+  "local_only": "127.0.0.1:8765",
+  "viewer_check_2026_09_05": {
+    "loading_progress_max_percent": 99,
+    "loading_cache_disabled": true,
+    "composition_variants_checked": 4,
+    "background_theme_combinations_checked": 12,
+    "browser_console_errors": 0,
+    "glb_sha256_unchanged": "15517a6b9c22eb33481e5ab5653f3e3e74f5fd42d7709acacae7224d4bebc932"
+  }
+}

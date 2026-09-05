@@ -1,4 +1,4 @@
-import {createStudio} from './photographic-studio.js?v=rosan-38';
+import {createStudio} from './photographic-studio.js?v=rosan-39';
 import {applyBrilliantOptics} from './diamond-optics.js?v=brilliant-recut-21';
 import * as THREE from 'three';
 import {TrackballControls} from 'three/addons/controls/TrackballControls.js';
@@ -62,7 +62,7 @@ new GLTFLoader().setDRACOLoader(draco).load('output/jewellery-card.glb?v=brillia
  o.material=Array.isArray(o.material)?mats:mats[0];original.set(o,o.material);
  });
  loaded=true;rotating=true;autoSpinPhase=0;secondarySpinDirection=1;last=performance.now();$('rotate').classList.add('active');$('rotate').setAttribute('aria-pressed','true');$('loading').style.display='none';window.viewerReady=true;window.viewerModel=root;window.viewerScene=scene;window.viewerCamera=camera;window.viewerRenderer=renderer;window.viewerPivot=pivot;
-},e=>{$('progress').textContent=e.total?`Загрузка объекта · ${Math.round(e.loaded/e.total*100)}%`:'Загрузка ювелирного объекта…';},error=>{$('loading').style.display='none';$('error').hidden=false;$('error').textContent='Не удалось загрузить модель. Запустите локальный сервер через start-viewer.cmd и откройте http://localhost:8765. '+error.message;console.error(error);});
+},e=>{$('progress').textContent=e.total?`Загрузка объекта · ${Math.min(99,Math.max(0,Math.floor(e.loaded/e.total*100)))}%`:'Загрузка ювелирного объекта…';},error=>{$('loading').style.display='none';$('error').hidden=false;$('error').textContent='Не удалось загрузить модель. Запустите локальный сервер через start-viewer.cmd и откройте http://localhost:8765. '+error.message;console.error(error);});
 function stop(){rotating=false;$('rotate').classList.remove('active');$('rotate').setAttribute('aria-pressed','false');}
 function preset(back){stop();controls.reset();camera.position.set(0,0,innerWidth<650?.28:.215);controls.target.set(0,0,0);target=new THREE.Quaternion().setFromEuler(back?new THREE.Euler(0,0,0):new THREE.Euler(Math.PI,0,Math.PI));controls.update();}
 $('front').onclick=()=>preset(false);$('back').onclick=()=>preset(true);

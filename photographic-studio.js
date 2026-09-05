@@ -33,17 +33,16 @@ export function createStudio(scene,renderer,software){
    vec2 p=studioPosition.xy*2.0;
    float halo=exp(-dot(p*vec2(1.7,1.05),p*vec2(1.7,1.05))*5.);
    float accent=0.;
-   if(composition>.5&&composition<1.5){accent=.075*halo-.020*(1.-halo);}
+   if(composition>.5&&composition<1.5){accent=.10*halo-.024*(1.-halo);}
    if(composition>1.5&&composition<2.5){
     float r=length((p-vec2(-.34,-.22))*vec2(.9,1.));
     float arcs=exp(-pow((r-.52)/.065,2.))+ .55*exp(-pow((r-.72)/.10,2.));
-    accent=.06*halo-.038*arcs*(1.-halo*.7);
+    accent=.07*halo-.055*arcs*(1.-halo*.6);
    }
    if(composition>2.5){
     float fold=sin(p.x*8.+p.y*2.+sin(p.y*3.)*.7);
-    accent=.065*halo+.024*fold*(1.-halo*.85);
+    accent=.07*halo+.035*fold*(1.-halo*.72);
    }
-   diffuseColor.rgb=clamp(diffuseColor.rgb+vec3(accent*compositionStrength),0.,1.);
    // Continuous 3D coordinates: no UV seam, screen-space mapping or time offset.
    // Broad mineral clouds, thin flowing veins and fine satin grain share one surface.
    vec3 q=studioPosition;
@@ -55,6 +54,7 @@ export function createStudio(scene,renderer,software){
    float grain=stoneNoise(q*420.)-.5;
    float relief=(clouds-.5)*.34-veins*.14+grain*.24;
    diffuseColor.rgb=clamp(diffuseColor.rgb*(.94+relief*textureStrength),0.,1.);
+   diffuseColor.rgb=clamp(diffuseColor.rgb+vec3(accent*compositionStrength),0.,1.);
   `);
  };
  const backdrop=new THREE.Mesh(new THREE.SphereGeometry(.75,128,80),material);
@@ -72,7 +72,7 @@ export function createStudio(scene,renderer,software){
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(2,2),shadowMaterial);
  ground.name='Transparent studio shadow receiver';ground.rotation.x=-Math.PI/2;ground.position.y=-.056;ground.receiveShadow=true;scene.add(ground);
  const themes={dark:['#161d27','#263049'],sand:['#e9e3d8','#fffaf1'],light:['#efd0da','#fff0f5']};
- function setTheme(name){const t=themes[name]||themes.dark;uniforms.pastelLow.value.set(t[0]);uniforms.pastelHigh.value.set(t[1]);scene.background.set(t[0]);uniforms.compositionStrength.value=name==='dark'?.12:1;uniforms.textureStrength.value=name==='dark'?.38:.85;}
+ function setTheme(name){const t=themes[name]||themes.dark;uniforms.pastelLow.value.set(t[0]);uniforms.pastelHigh.value.set(t[1]);scene.background.set(t[0]);uniforms.compositionStrength.value=name==='dark'?.50:.72;uniforms.textureStrength.value=name==='dark'?.38:.85;}
  function setComposition(value){uniforms.composition.value=Number(value);}
  function update(){renderer.shadowMap.needsUpdate=true;}
  setTheme('dark');return {setTheme,setComposition,update,key,backdrop,ground};
